@@ -1,0 +1,162 @@
+:-op(600,xfy,[\]).
+
+% Julian Jimenez Gonzalez
+% Jose Alejandro Lozano Garrido
+
+
+/* 	http://elvelerodigital.com/apuntes/lyl/sintaxis_oc.htm
+http://programacionlogica.blogspot.com.es/2006/03/dcg-notaci-de-reglas-gramaticales-en.html
+
+
+	Las fotografías de estas vacaciones han salido muy bien 
+ 	Fui al quiosco, pero estaba cerrado
+ 	Canta para que llueva
+	El avión salió a la hora señalada
+	La cocinera preparó un guiso riquísimo
+	Esta mañana has hecho un gran favor
+*/
+
+/* ESTRUCTURA BASE DE LA FRASE, CON CLAUSULA DE INTERFAZ: LISTAS -> DIFERENCIA DE LISTAS */
+
+frase(Arbol, Frase) :- frase_listas(Arbol, Frase\[]).
+
+frase_listas(f(SN,SV), P0\P2) :- sn(SN, Numero, P0\P1),
+				sv(SV, Numero, P1\P2).
+
+frase_listas(f(SV,SV), P0\P2) :- sv(SV, _, P0\P1),
+				sv(SV, _, P1\P2).
+%%%%%%%%%%%%%%%%%%
+% SINTAGMA NOMINAL 
+%%%%%%%%%%%%%%%%%%
+
+sn(sn(nil),_,P0\P0).
+
+% con Determinante y Adjetivo
+sn(sn(Determinante, Nombre, Adjetivo), Numero, P0\P3) :- determinante(Determinante, Genero, Numero, P0\P1),
+							nombre(Nombre, Genero, Numero, P1\P2),
+							adjetivo(Adjetivo, Genero, Numero, P2\P3).
+
+% con Determinante y sin Adjetivo
+sn(sn(Determinante, Nombre), Numero, P0\P2) :- determinante(Determinante, Genero, Numero, P0\P1),
+						nombre(Nombre, Genero, Numero, P1\P2).
+
+
+% con SPrep
+sn(sn(Determinante, Nombre, SPrep), Numero, P0\P3) :- determinante(Determinante, Genero, Numero, P0\P1),
+						nombre(Nombre, Genero, Numero, P1\P2),
+						sprep(SPrep, P2\P3).
+
+/* solo Nombre */
+sn(sn(Nombre), Numero, P0\P1) :- nombre(Nombre, _, Numero, P0\P1).
+
+%%%%%%%%%%%%%%%%%
+% SINTAGMA VERBAL 
+%%%%%%%%%%%%%%%%%
+
+sv(sv(nil),_,P0\P0).
+
+% con SN y SPrep
+sv(sv(Verbo, SN, SPrep), Numero, P0\P3) :- verbo(Verbo, Numero, P0\P1),
+					sn(SN, _, P1\P2),
+					sprep(SPrep, P2\P3).
+
+% solo con SPrep
+sv(sv(Verbo, SPrep), Numero, P0\P2) :- verbo(Verbo, Numero, P0\P1),
+					sprep(SPrep, P1\P2).
+
+% solo con SN
+sv(sv(Verbo, SN), Numero, P0\P2) :- verbo(Verbo, Numero, P0\P1),
+					sn(SN, _, P1\P2).
+
+% con conjuncion + SN
+sv(sv(Conjuncion, Verbo, SN), Numero, P0\P3) :- verbo(Verbo, Numero, P0\P1),
+				conjuncion(Conjuncion, P2\P3),
+				sn(SN, _, P1\P2).
+
+% con adverbio
+sv(sv(Verbo, SAdv), Numero, P0\P2) :- verbo(Verbo, Numero, P0\P1),
+					sadv(SAdv, P1\P2).
+
+% sin SN ni SPrep
+sv(sv(Verbo), Numero, P0\P1) :- verbo(Verbo, Numero, P0\P1).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% SINTAGMA PREPOSICIONAL 
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+sprep(sprep(SPrep, SN), P0\P2):- preposicion(SPrep, P0\P1),
+				sn(SN, _, P1\P2).
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% SINTAGMA ADVERBIAL 
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+sadv(sadv(Adv1, Adv2), P0\P2):- adverbio(Adv1, P0\P1),
+				adverbio(Adv2, P1\P2).
+
+
+%%%%%%%%%%%%%
+% DICCIONARIO
+%%%%%%%%%%%%%
+
+/* 
+	Las fotografias de estas vacaciones han salido muy bien 
+ 	Fui al quiosco, pero estaba cerrado
+ 	Canta para que llueva
+	El avion salio a la hora señalada
+	La cocinera preparó un guiso riquisimo
+	Esta mañana has hecho un gran favor
+*/
+% nombre(Nombre, Genero, Numero, P0\P1)
+
+nombre(fotografias, femenino, plural, [fotografias|X]\X).
+nombre(vacaciones, femenino, plural, [vacaciones|X]\X).
+nombre(quiosco, masculino, singular, [quiosco|X]\X).
+nombre(avion, masculino, singular, [avion|X]\X).
+nombre(hora, femenino, singular, [hora|X]\X).
+nombre(cocinera, femenino, singular, [cocinera|X]\X).
+nombre(guiso, masculino, singular, [guiso|X]\X).
+nombre(mañana, femenino, singular, [mañana|X]\X).
+nombre(favor, masculino, singular, [favor|X]\X).
+
+% determinante(Determinante, Genero, Numero, P0\P1)
+
+determinante(las, femenino, plural, [las|X]\X).
+determinante(estas, femenino, plural, [estas|X]\X).
+determinante(esta, femenino, singular, [esta|X]\X).
+determinante(el, masculino, singular, [el|X]\X).
+determinante(la, femenino, singular, [la|X]\X).
+determinante(un, masculino, singular, [un|X]\X).
+
+% adjetivo(Adjetivo, Genero, Numero, P0\P1)
+
+adjetivo(cerrado, masculino, singular, [cerrado|X]\X).
+adjetivo(riquisimo, masculino, singular, [riquisimo|X]\X).
+adjetivo(senhalada, femenino, singular, [senhalada|X]\X).
+
+% verbo(Verbo, Numero, P0\P1)
+
+verbo('han salido', plural, ['han salido'|X]\X).
+verbo(fui, singular, [fui|X]\X).
+verbo(canta, singular, [canta|X]\X).
+verbo(llueva, singular, [llueva|X]\X).
+
+% preposicion(Preposicion, P0\P1)
+
+preposicion(de, [de|X]\X).
+preposicion(al, [al|X]\X).
+preposicion(para, [para|X]\X).
+
+% adverbio (Adverbio, P0\P1)
+
+adverbio(muy, [muy|X]\X).
+adverbio(bien, [bien|X]\X).
+
+% conjuncion(Conjuncion, P0\P1)
+
+conjuncion(pero, [pero|X]\X).
+
+% pronombre
+

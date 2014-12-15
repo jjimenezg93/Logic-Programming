@@ -1,0 +1,92 @@
+% PREDICADO GENERAL, PARA INCORPORAR SIMPLIFICACIONES
+% derivar(X, X, ):- derivar
+
+%%%%% SIMPLIFICACIONES DE OPERACIONES
+operacion(A + B, C) :- number(A), number(B), !, C is A + B.
+operacion(A - B, C) :- number(A), number(B), !, D is -B, operacion(A + D, C).
+ 
+operacion(0 + A, A) :- !.
+operacion(A + 0, A) :- !.
+operacion(A - 0, A) :- !.
+operacion(0 - A, -A) :- !.
+operacion(A - A, 0) :- !.
+ 
+operacion(A * B, C) :- number(A), number(B), !, C is A * B.
+operacion(A * B, C) :- number(A), number(B), !, C is A * B.
+ 
+operacion(1 * A, A) :- !.
+operacion(A * 1, A) :- !.
+operacion(0 * A, 0) :- atomic(A), !.
+operacion(A * 0, 0) :- atomic(A), !.
+ 
+operacion(A, A). 
+
+%%%%% SIMPLIFICACIONES DE SIGNOS
+simplificarSigno(-(-A), A).
+simplificarSigno(-(A + B), -A - B).
+simplificarSigno(-(A - B), -A + B).
+simplificarSigno(A, A). 
+
+%%%%%%%%%%%%%%%%%%%%%
+% DERIVAR POLINOMIO %
+%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%% SIMPLES %%%%%%%%%%%
+
+%%%%%%%%%%%%% COMPLEJAS %%%%%%%%%%%%%
+
+
+
+derivar(C, X, 0):- atomic(C), C\=X, !.
+%% atomic o number, da igual
+
+derivar(X, X, 1):-!.
+
+derivar(A+B, X, DA+DB):- derivar(A, X, DA),!,
+                     derivar(B, X, DB).
+derivar(A*B, X, DA*B+A*DB):- derivar(A, X, DA),!,
+                        derivar(B, X, DB).
+
+%% potencia
+derivar(X ^ A, X, A * X ^ AA) :- A > 0, AA is A-1, !.
+
+%REVISAR ESTA DERIVADA PORQUE YO CREO QUE ES A*X*B (DX ES A*B). SIEMPRE QUE A Y B SEAN UNA CONSTANTE.
+derivar(A*X*B, X, DA*B+A*DB):- derivar(A, X, DA),!,
+                        derivar(B, X, DB).
+
+%% seno
+derivar(sin(X), X, cos(X)):- !.
+derivar(sin(F), X, DF * cos(F)) :- derivar(F, X, DF), !.
+
+%% coseno
+derivar(cos(X), X, -sin(X)):- !.
+derivar(cos(F), X, -DF * sin(F)) :- derivar(F, X, DF), !.
+
+
+%%%%%%%%%%%%%%%%%%%%%
+% ORDENAR POLINOMIO %
+%%%%%%%%%%%%%%%%%%%%%
+
+% orden_ins(Lista,ListaOrdenada).
+orden_ins([],[]).
+orden_ins([Car|Cdr], ListaOrd):- orden_ins(Cdr,CdrOrd),
+                                inserta(Car, CdrOrd, ListaOrd).
+
+inserta(X, [], [X]).
+inserta(Car, [Cadr|Cddr], [Cadr|R]):- Cadr<Car, !,
+                                inserta(Car,Cddr,R).
+inserta(Car, [Cadr|Cddr], [Car,Cadr|Cddr]).
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% NORMALIZAR POLINOMIO %
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+norm(0,0).
+norm(Cdr+Car, ExprOrd):- norm(Cdr, CdrOrd),
+                        coloca(Car, CdrOrd, ExprOrd).
+
+coloca(A,0,A).
+coloca(C*X**D, Cddr+A*X**B, R+A*X**B):- D<B, !,
+                                        coloca(C*X**D,Cddr,R).
+coloca(C*X**D, Cddr+A*X**B, Cddr+A*X**B+C*X**D).
+
